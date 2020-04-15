@@ -1,6 +1,6 @@
-name:        'Get Changed Files'
-description: 'Saves lists of changed files as JSON for use by other actions.'
-author:      'Dustin Falgout <dustin@falgout.us>'
+name:        'Get Changed Files With Regex'
+description: 'Get Changed Files with Regex Support'
+author:      'Dustin Falgout <dustin@falgout.us>, Burak Emre Kabakci <emrekabakci@gmail.com>'
 runs:
   using: 'node12'
   main:  'dist/main.js'

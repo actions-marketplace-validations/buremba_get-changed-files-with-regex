@@ -1,20 +1,19 @@
 // External Dependencies
-const fs                  = require('fs');
 const { context, GitHub } = require('@actions/github');
-const core                = require('@actions/core');
+const core = require('@actions/core');
 
 const commits = context.payload.commits.filter(c => c.distinct);
-const repo    = context.payload.repository;
-const org     = repo.organization;
-const owner   = org || repo.owner;
+const repo = context.payload.repository;
+const org = repo.organization;
+const owner = org || repo.owner;
 
-const FILES          = [];
+const FILES = [];
 const FILES_MODIFIED = [];
-const FILES_ADDED    = [];
-const FILES_DELETED  = [];
-const FILES_RENAMED  = [];
+const FILES_ADDED = [];
+const FILES_DELETED = [];
+const FILES_RENAMED = [];
 
-const gh   = new GitHub(core.getInput('token'));
+const gh = new GitHub(core.getInput('token'));
 const args = { owner: owner.name, repo: repo.name };
 
 function isAdded(file) {
@@ -35,38 +34,39 @@ function isRenamed(file) {
 
 async function processCommit(commit) {
 	args.ref = commit.id;
-	result   = await gh.repos.getCommit(args);
+	result = await gh.repos.getCommit(args);
+	const pattern = core.getInput('pattern')
+	const re = new RegExp(pattern.length > 0 ? pattern : ".*")
 
 	if (result && result.data) {
 		const files = result.data.files;
 
-		files.forEach( file => {
-			isModified(file) && FILES.push(file.filename);
-			isAdded(file) && FILES.push(file.filename);
-			isRenamed(file) && FILES.push(file.filename);
+		files.forEach(file => {
+			const res = re.exec(file.filename)
+			if (res == null) {
+				return
+			}
+			const name = res[1]
 
-			isModified(file) && FILES_MODIFIED.push(file.filename);
-			isAdded(file) && FILES_ADDED.push(file.filename);
-			isDeleted(file) && FILES_DELETED.push(file.filename);
-			isRenamed(file) && FILES_RENAMED.push(file.filename);
+			isModified(file) && FILES.push(name);
+			isAdded(file) && FILES.push(name);
+			isRenamed(file) && FILES.push(name);
+
+			isModified(file) && FILES_MODIFIED.push(name);
+			isAdded(file) && FILES_ADDED.push(name);
+			isDeleted(file) && FILES_DELETED.push(name);
+			isRenamed(file) && FILES_RENAMED.push(name);
 		});
 	}
 }
 
 
 Promise.all(commits.map(processCommit)).then(() => {
-	process.stdout.write(`::debug::${JSON.stringify(FILES, 4)}`);
-	process.stdout.write(`::set-output name=all::${JSON.stringify(FILES, 4)}`);
-	process.stdout.write(`::set-output name=added::${JSON.stringify(FILES_ADDED, 4)}`);
-	process.stdout.write(`::set-output name=deleted::${JSON.stringify(FILES_DELETED, 4)}`);
-	process.stdout.write(`::set-output name=modified::${JSON.stringify(FILES_MODIFIED, 4)}`);
-	process.stdout.write(`::set-output name=renamed::${JSON.stringify(FILES_RENAMED, 4)}`);
-
-	fs.writeFileSync(`${process.env.HOME}/files.json`, JSON.stringify(FILES), 'utf-8');
-	fs.writeFileSync(`${process.env.HOME}/files_modified.json`, JSON.stringify(FILES_MODIFIED), 'utf-8');
-	fs.writeFileSync(`${process.env.HOME}/files_added.json`, JSON.stringify(FILES_ADDED), 'utf-8');
-	fs.writeFileSync(`${process.env.HOME}/files_deleted.json`, JSON.stringify(FILES_DELETED), 'utf-8');
-	fs.writeFileSync(`${process.env.HOME}/files_renamed.json`, JSON.stringify(FILES_RENAMED), 'utf-8');
+	core.setOutput("all", FILES.join(' '))
+	core.setOutput("added", FILES_ADDED.join(' '))
+	core.setOutput("deleted", FILES_DELETED.join(' '))
+	core.setOutput("modified", FILES_MODIFIED.join(' '))
+	core.setOutput("renamed", FILES_RENAMED.join(' '))
 
 	process.exit(0);
 });

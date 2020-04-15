@@ -3,6 +3,9 @@
   "version": "2.0.7rc1",
   "private": true,
   "main": "dist/main.js",
+  "scripts": {
+    "build": "ncc build main.js"
+  },
   "dependencies": {
     "@actions/core": "^1.2.0",
     "@actions/github": "2.0.0"
