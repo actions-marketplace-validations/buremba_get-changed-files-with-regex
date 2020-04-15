@@ -3894,8 +3894,7 @@ const core = __webpack_require__(470);
 
 const commits = context.payload.commits.filter(c => c.distinct);
 const repo = context.payload.repository;
-const org = repo.organization;
-const owner = org || repo.owner;
+const owner = repo.organization || repo.owner.name;
 
 const FILES = [];
 const FILES_MODIFIED = [];
@@ -3904,7 +3903,6 @@ const FILES_DELETED = [];
 const FILES_RENAMED = [];
 
 const gh = new GitHub(core.getInput('token'));
-const args = { owner: owner.name, repo: repo.name };
 
 function isAdded(file) {
 	return 'added' === file.status;
@@ -3923,8 +3921,7 @@ function isRenamed(file) {
 }
 
 async function processCommit(commit) {
-	args.ref = commit.id;
-	result = await gh.repos.getCommit(args);
+	result = await gh.repos.getCommit({ owner: owner, repo: repo.name, ref: commit.id });
 	const pattern = core.getInput('pattern')
 	const re = new RegExp(pattern.length > 0 ? pattern : ".*")
 
