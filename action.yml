@@ -3,7 +3,7 @@ description: 'Get Changed Files with Regex Support'
 author:      'Dustin Falgout <dustin@falgout.us>, Burak Emre Kabakci <emrekabakci@gmail.com>'
 runs:
   using: 'node12'
-  main:  'dist/main.js'
+  main:  'dist/index.js'
 inputs:
   token:
     description: GitHub Personal Access Token
