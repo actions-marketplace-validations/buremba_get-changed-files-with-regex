@@ -3929,6 +3929,7 @@ async function processCommit(commit) {
 		const files = result.data.files;
 
 		files.forEach(file => {
+			core.warning(file.filename)
 			const res = re.exec(file.filename)
 			if (res == null) {
 				return
@@ -3954,8 +3955,11 @@ Promise.all(commits.map(processCommit)).then(() => {
 	core.setOutput("deleted", FILES_DELETED.join(' '))
 	core.setOutput("modified", FILES_MODIFIED.join(' '))
 	core.setOutput("renamed", FILES_RENAMED.join(' '))
-
-	process.exit(0);
+	if (FILES.length === 0) {
+		core.warning('No changes found in given format.')
+	}
+}).catch(error => {
+	core.setFailed(error.message);
 });
 
 
